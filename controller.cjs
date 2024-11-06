@@ -39,3 +39,60 @@ api.post("/login", isNotLogged, async (req, res) => {
 });
 
 // define a post request method to handle requests to "/logout" endpoint
+api.post("/logout", isLogged, (req, res) => {
+  req.session.destroy();
+  res.status(200).send({ status: "Bye bye!" });
+});
+
+// define post method for "/signup"
+api.post("/signup", async (req, res) => {
+  try {
+    const { session, body } = req;
+    const { username, password } = body;
+    const user = (await User) / signup(username, password);
+    res.status(201).json({ status: "Created!" });
+  } catch (error) {
+    res.status(403).json({ error: error.message });
+  }
+});
+
+//  define "/profile"
+api.get("/profile", isLogged, (req, res) => {
+  const { user } = req.session;
+  res.status(200).json({ user });
+});
+
+// define "/changepass"
+api.put("/changepass", isLogged, async (req, res) => {
+  try {
+    const { session, body } = req;
+    const { password } = body;
+    const { _id } = session.user;
+    const user = await User.findOne({ _id });
+    if (user) {
+      await user.changePass(password);
+      res.status(200).json({ status: "Pwd changed" });
+    } else {
+      res.status(403).json({ status: user });
+    }
+  } catch (error) {
+    res.status(403).json({ error: error.message });
+  }
+});
+
+// define "/delete"
+api.delete("/delete", isLogged, async (req, res) => {
+  try {
+    const { _id } = req.session.user;
+    const user = await User.findOne({ _id });
+    await user.remove();
+    req.session.destroy((err) => {
+      if (err) throw new Error(err);
+      res.status(200).json({ status: "Deleted!" });
+    });
+  } catch (error) {
+    res.status(403).json({ error: error.message });
+  }
+});
+
+module.exports = api;
