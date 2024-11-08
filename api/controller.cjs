@@ -1,9 +1,7 @@
 const express = require("express");
-const User = require("./model");
+const User = require("./model.cjs");
 const api = express.Router();
 
-// define a request handler to check if the user is
-// logged in and another to if they are not.
 const isLogged = ({ session }, res, next) => {
   if (!session.user)
     res.status(403).json({
@@ -11,7 +9,6 @@ const isLogged = ({ session }, res, next) => {
     });
   else next();
 };
-
 const isNotLogged = ({ session }, res, next) => {
   if (session.user)
     res.status(403).json({
@@ -20,7 +17,6 @@ const isNotLogged = ({ session }, res, next) => {
   else next();
 };
 
-// define a post request method to handle request to "/login" endpoint
 api.post("/login", isNotLogged, async (req, res) => {
   try {
     const { session, body } = req;
@@ -37,32 +33,24 @@ api.post("/login", isNotLogged, async (req, res) => {
     res.status(403).json({ error: error.message });
   }
 });
-
-// define a post request method to handle requests to "/logout" endpoint
 api.post("/logout", isLogged, (req, res) => {
   req.session.destroy();
   res.status(200).send({ status: "Bye bye!" });
 });
-
-// define post method for "/signup"
 api.post("/signup", async (req, res) => {
   try {
     const { session, body } = req;
     const { username, password } = body;
-    const user = (await User) / signup(username, password);
+    const user = await User.signup(username, password);
     res.status(201).json({ status: "Created!" });
   } catch (error) {
     res.status(403).json({ error: error.message });
   }
 });
-
-//  define "/profile"
 api.get("/profile", isLogged, (req, res) => {
   const { user } = req.session;
   res.status(200).json({ user });
 });
-
-// define "/changepass"
 api.put("/changepass", isLogged, async (req, res) => {
   try {
     const { session, body } = req;
@@ -79,8 +67,6 @@ api.put("/changepass", isLogged, async (req, res) => {
     res.status(403).json({ error: error.message });
   }
 });
-
-// define "/delete"
 api.delete("/delete", isLogged, async (req, res) => {
   try {
     const { _id } = req.session.user;
